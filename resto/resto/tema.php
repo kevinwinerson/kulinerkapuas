@@ -5,6 +5,7 @@ if (!@$_SESSION['telah_login']) {
   header("location: login.php");
   exit; // Terminate script execution after redirection
 }
+$id=$_POST['idtema'];
 
 
 // Pagination
@@ -13,11 +14,11 @@ $page = isset($_GET['page']) ? intval($_GET['page']) : 1; // Halaman saat ini
 $start = ($page - 1) * $per_page; // Perhitungan offset
 
 // Query untuk mengambil data dengan pagination
-$query="SELECT * FROM restoran ORDER BY idrestoran DESC LIMIT $start, $per_page";
+$query="SELECT * FROM restoran  where idtema= $id ORDER BY idrestoran DESC LIMIT $start, $per_page";
 $result = $koneksi->query($query);
 
 // Hitung total jumlah data
-$total_query = "SELECT COUNT(*) as total FROM restoran";
+$total_query = "SELECT COUNT(*) as total FROM restoran where idtema= $id";
 $total_result = $koneksi->query($total_query);
 $total_data = $total_result->fetch_assoc()['total'];
 $total_pages = ceil($total_data / $per_page); // Jumlah total halaman
@@ -37,7 +38,7 @@ $resultlokasi = $koneksi->query($querylokasi);
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.118.2">
-    <title>Kuliner Kapuas</title>
+    <title>Tema</title>
     <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/album/">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
   <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet"> 
@@ -252,13 +253,12 @@ $resultlokasi = $koneksi->query($querylokasi);
 </div>
         </div>
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mt-3">
+      <?php if ($result ->num_rows>0): ?>
       <?php while ($fetch = $result->fetch_assoc()): ?>
         <div class="col">
           <div class="card shadow-sm mb-3 bg-dark" >
            <img src="../IMGresto/<?= $fetch["gbrestoran"] ?? '-' ?>" width="100%" height="225" alt="" >
-            
-            <div class="card-body">
-                
+            <div class="card-body"> 
               <h5 class="card-text text-white" ><?= $fetch["namarestoran"] ?? '-' ?></h5>
               <h5 class="card-text text-white" ><?= $fetch["vectors"] ?? '-' ?></h5>
               <div class="d-flex justify-content-between align-items-center">
@@ -276,18 +276,22 @@ $resultlokasi = $koneksi->query($querylokasi);
           </div>
         </div>
         <?php endwhile ?>
+        <?php else : ?>
+          <div class="container"><h1>  tidak ditemukan</h1></div>
+          
+        <?php endif; ?>
         
       </div>
       <nav aria-label="...">
   <ul class="pagination px-2">
     <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
-      <a class="page-link" href="index.php?page=<?php echo ($page <= 1) ? 1 : ($page - 1); ?>">Previous</a>
+      <a class="page-link" href="tema.php?page=<?php echo ($page <= 1) ? 1 : ($page - 1); ?>">Previous</a>
     </li>
     <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
-      <li class="page-item <?php echo ($page == $i) ? 'active' : ''; ?>"><a class="page-link" href="index.php?page=<?php echo $i; ?>"><?php echo $i; ?></a></li>
+      <li class="page-item <?php echo ($page == $i) ? 'active' : ''; ?>"><a class="page-link" href="tema.php?page=<?php echo $i; ?>"><?php echo $i; ?></a></li>
     <?php endfor; ?>
     <li class="page-item <?php echo ($page >= $total_pages) ? 'disabled' : ''; ?>">
-      <a class="page-link" href="index.php?page=<?php echo ($page >= $total_pages) ? $total_pages : ($page + 1); ?>">Next</a>
+      <a class="page-link" href="tema.php?page=<?php echo ($page >= $total_pages) ? $total_pages : ($page + 1); ?>">Next</a>
     </li>
   </ul>
 </nav>

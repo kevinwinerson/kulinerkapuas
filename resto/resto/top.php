@@ -13,7 +13,7 @@ $page = isset($_GET['page']) ? intval($_GET['page']) : 1; // Halaman saat ini
 $start = ($page - 1) * $per_page; // Perhitungan offset
 
 // Query untuk mengambil data dengan pagination
-$query="SELECT * FROM restoran ORDER BY idrestoran DESC LIMIT $start, $per_page";
+$query="SELECT * FROM restoran ORDER BY vectors DESC LIMIT $start, $per_page";
 $result = $koneksi->query($query);
 
 // Hitung total jumlah data
@@ -37,7 +37,7 @@ $resultlokasi = $koneksi->query($querylokasi);
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.118.2">
-    <title>Kuliner Kapuas</title>
+    <title>Top Restoran</title>
     <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/album/">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
   <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet"> 
@@ -217,7 +217,7 @@ $resultlokasi = $koneksi->query($querylokasi);
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">LOKASI</a>
               <ul class="dropdown-menu">
               <?php while ($fetchlokasi = $resultlokasi->fetch_assoc()): ?> 
-                <li><form class="dropdown-item" action="lokasi.php" method="post">
+                <li><form class="dropdown-item" action="tema.php" method="post">
                     <input type="hidden" name="idlokasi" value="<?= $fetchlokasi["idlokasi"] ?? '-' ?>">
                     <button class="btn btn-secondary" type="submit"><?= $fetchlokasi["lokasi"] ?? '-' ?></button>
               </form>
@@ -281,13 +281,13 @@ $resultlokasi = $koneksi->query($querylokasi);
       <nav aria-label="...">
   <ul class="pagination px-2">
     <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
-      <a class="page-link" href="index.php?page=<?php echo ($page <= 1) ? 1 : ($page - 1); ?>">Previous</a>
+      <a class="page-link" href="top.php?page=<?php echo ($page <= 1) ? 1 : ($page - 1); ?>">Previous</a>
     </li>
     <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
-      <li class="page-item <?php echo ($page == $i) ? 'active' : ''; ?>"><a class="page-link" href="index.php?page=<?php echo $i; ?>"><?php echo $i; ?></a></li>
+      <li class="page-item <?php echo ($page == $i) ? 'active' : ''; ?>"><a class="page-link" href="top.php?page=<?php echo $i; ?>"><?php echo $i; ?></a></li>
     <?php endfor; ?>
     <li class="page-item <?php echo ($page >= $total_pages) ? 'disabled' : ''; ?>">
-      <a class="page-link" href="index.php?page=<?php echo ($page >= $total_pages) ? $total_pages : ($page + 1); ?>">Next</a>
+      <a class="page-link" href="top.php?page=<?php echo ($page >= $total_pages) ? $total_pages : ($page + 1); ?>">Next</a>
     </li>
   </ul>
 </nav>

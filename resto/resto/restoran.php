@@ -1,201 +1,212 @@
 <?php 
 include 'koneksi.php';
-include 'fungsirestoran';
+session_start();
+if (!@$_SESSION['telah_login']) {
+  header("location: login.php");
+}
+
+$id=$_GET['idrestoran'];
+$iduser= $_SESSION['id'];
+$user= $_SESSION['username'] ;
+$query = "SELECT*FROM restoran where idrestoran=$id";
+$result = $koneksi->query($query);
+$fetch = $result->fetch_assoc();
+
+//var_dump($fetch); die;
+$sqlreview = "SELECT * FROM review WHERE idrestoran=$id ";
+$queryreview = $koneksi->query($sqlreview);
+$querytema="SELECT*FROM tema";
+$resulttema = $koneksi->query($querytema);
+$querylokasi="SELECT*FROM lokasi";
+$resultlokasi = $koneksi->query($querylokasi);
+
+if(isset($_POST['submit'])) {
+
+$iduser= $_POST['iduser'];
+$username= $_POST['username'];
+$idrestoran= $_POST['idrestoran'];
+$namarestoran= $_POST['namarestoran'];
+$rasa= $_POST['rasa'];
+$vibe= $_POST['vibe'];
+$bersih= $_POST['kebersihan'];
+$pelayanan= $_POST['pelayanan'];
+$review= $_POST['review'];
+$tanggal = date("d/m/y");
+
+
+$query = "INSERT INTO review (idreview,idrestoran,iduser,username,namarestoran,rasa,vibe,bersih,pelayanan,review,tglpost) VALUES('".null."','".$idrestoran."','".$iduser."','".$username."','".$namarestoran."','".$rasa."','".$vibe."','".$bersih."','".$pelayanan."','".$review."','".$tanggal."')";
+
+$data  = $koneksi->query($query);
+
+if ($data) {
+//perhitungan vectors
+$sql = "SELECT AVG(rasa) as rata_rasa, AVG(vibe) as rata_vibe, AVG(bersih) as rata_bersih, AVG(pelayanan) as rata_pelayanan FROM review WHERE idrestoran= $idrestoran ";
+$query = $koneksi->query($sql);
+$result = $query->fetch_assoc();
+
+// Mengkonversi hasil rata-rata menjadi integer
+$rasa = intval($result['rata_rasa']);
+$suasana = intval($result['rata_vibe']);
+$bersih = intval($result['rata_bersih']);
+$pelayanan = intval($result['rata_pelayanan']);
+
+// Melakukan pemangkatan dan menggabungkan nilai-nilai
+$rasas = $rasa ** 0.4;
+$suasanas = $suasana ** 0.1;
+$bersihs = $bersih ** 0.2;
+$pelayanans = $pelayanan ** 0.3;
+$vectors = $rasas + $suasanas + $bersihs + $pelayanans;
+
+// Menjalankan query UPDATE
+$sql = "UPDATE `restoran` SET `vectors` = $vectors WHERE `restoran`.`idrestoran` = $idrestoran";
+$query = $koneksi->query($sql);
+
+vectorv($koneksi);
+
+echo "<script>      
+  alert('review Berhasil Disimpan');
+ 
+  </script>";
+
+} else { 
+   
+    echo "<script>
+        alert('review Gagal Disimpan');
+        
+       
+    </script>";
+
+}
+ header("Location: " . $_SERVER['PHP_SELF'] . "?idrestoran=" . $idrestoran);
+ exit;
+}
+
+if (isset($_POST['hapus'])) {
+  $idhapusreview = $_POST['idreview'];
+
+  // Menggunakan prepared statement untuk menghindari SQL Injection
+  $stmt = $koneksi->prepare("DELETE FROM review WHERE idreview = ?");
+  $stmt->bind_param("i", $idhapusreview);
+  $hapusdata = $stmt->execute();
+
+  if ($hapusdata) {
+      //perhitungan vectors
+$sql = "SELECT AVG(rasa) as rata_rasa, AVG(vibe) as rata_vibe, AVG(bersih) as rata_bersih, AVG(pelayanan) as rata_pelayanan FROM review WHERE idrestoran= $id ";
+$query = $koneksi->query($sql);
+$result = $query->fetch_assoc();
+
+// Mengkonversi hasil rata-rata menjadi integer
+$rasa = intval($result['rata_rasa']);
+$suasana = intval($result['rata_vibe']);
+$bersih = intval($result['rata_bersih']);
+$pelayanan = intval($result['rata_pelayanan']);
+
+// Melakukan pemangkatan dan menggabungkan nilai-nilai
+$rasas = $rasa ** 0.4;
+$suasanas = $suasana ** 0.1;
+$bersihs = $bersih ** 0.2;
+$pelayanans = $pelayanan ** 0.3;
+$vectors = $rasas + $suasanas + $bersihs + $pelayanans;
+
+// Menjalankan query UPDATE
+$sql = "UPDATE `restoran` SET `vectors` = $vectors WHERE `restoran`.`idrestoran` = $id";
+$query = $koneksi->query($sql);
+
+    vectorv($koneksi);
+    echo "<script>
+          alert('Review Berhasil Dihapus');
+      </script>";
+  } else {
+      echo "<script>
+          alert('Review Gagal Dihapus');
+      </script>";
+  }
+
+  // Pastikan $idrestoran sudah diatur sebelumnya
+  if (isset($id)) {
+      // Redirect harus dilakukan sebelum output HTML apapun
+      header("Location: " . $_SERVER['PHP_SELF'] . "?idrestoran=" . $id);
+      exit;
+  }
+}
+
+
+function vectorv($koneksi){
+  // Mengambil data vektor dari tabel restoran
+$sql = "SELECT vectors FROM RESTORAN";
+$query = $koneksi->query($sql);
+$results = $query->fetch_all(MYSQLI_ASSOC);
+
+// Inisialisasi variabel untuk menyimpan jumlah vektor
+$totalVectors = 0;
+
+// Menghitung jumlah vektor dari setiap baris data
+foreach ($results as $row) {
+   //Mengambil nilai vektor dari setiap baris dan menambahkannya ke total
+  $totalVectors += $row['vectors'];
+}
+// Memilih semua data dari tabel restoran
+$sql = "SELECT * FROM restoran";
+$query = $koneksi->query($sql);
+
+// Memeriksa apakah kueri berhasil dieksekusi
+if (!$query) {
+  die("Kueri SQL gagal dieksekusi: " . $koneksi->error);
+}
+
+// Iterasi melalui setiap baris restoran
+while ($row = $query->fetch_assoc()) {
+  $id = $row['idrestoran'];
+  $vectors = $row['vectors'];
+
+  // Menghitung total vektor untuk restoran tertentu
+
+  // Memastikan total vektor tidak nol untuk menghindari pembagian dengan nol
+  if ($totalVectors != 0) {
+      // Menghitung nilai vectorv untuk restoran tertentu
+      $vectorv = $vectors / $totalVectors;
+
+      // Memperbarui nilai vectorv untuk restoran tertentu
+      $updateSql = "UPDATE restoran SET vectorv='$vectorv' WHERE idrestoran='$id'";
+      $updateQuery = $koneksi->query($updateSql);
+
+      // Memeriksa apakah kueri update berhasil dieksekusi
+      if (!$updateQuery) {
+          die("Kueri update gagal dieksekusi: " . $koneksi->error);
+      }
+  }
+}
+}
+
+
+
+
+
+
 ?>
+
+
 <!doctype html>
 <html lang="en" data-bs-theme="auto">
-  <head><script src="../assets/js/color-modes.js"></script>
-
+  <head>
+    <script src="../assets/js/color-modes.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.118.2">
-    <title>HALAMAN RESTORAN</title>
-
+    <title><?= $fetch["namarestoran"] ?? '-' ?></title>
     <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/album/">
-
-    
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
-
-<link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet"> 
+  <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB94cV437Em7xBaIRU89VPCSDBnzyNQN9g"></script>
-    <style>
-      
-
-    .rating {
-      unicode-bidi: bidi-override;
-      direction: rtl;
-      text-align: center;
-    }
-
-    .rating > input {
-      display: none;
-    }
-
-    .rating > label {
-      display: inline-block;
-      position: relative;
-      width: 1.1em;
-      font-size: 2em;
-      color: #ccc;
-      cursor: pointer;
-    }
-
-    .rating > label:before {
-      content: "\2605";
-      position: absolute;
-      opacity: 0.25;
-      transition: opacity 0.25s, color 0.25s; /* Menambahkan transisi warna */
-      color: #ccc; /* Warna default bintang */
-    }
-
-    .rating > input:checked ~ label:before,
-    .rating > input:checked ~ label:hover:before {
-      opacity: 1;
-      color: gold; /* Warna emas saat bintang dipilih */
-    }
-
-    /* Menambahkan gaya ketika bintang dipilih */
-    .rating > label.checked:before {
-      opacity: 1;
-      color: gold; /* Warna emas saat bintang dipilih */
-    }
-
-      #map {
-            height: 400px;
-            width: 100%;
-        }
-        body{margin-top:20px;
-          font-family: "Times New Roman", Times, serif;
-        }
-
-.content-item {
-    padding: 0;
-	background-color:#FFFFFF;
-}
-
-.content-item.grey {
-	background-color:#F0F0F0;
-	padding:50px 0;
-	height:100%;
-}
-
-.content-item h2 {
-	font-weight:700;
-	font-size:35px;
-	line-height:45px;
-	text-transform:uppercase;
-	margin:20px 0;
-}
-
-.content-item h3 {
-	font-weight:400;
-	font-size:20px;
-	color:#000000;
-	margin:10px 0 15px;
-	padding:0;
-}
-
-.content-headline {
-	height:1px;
-	text-align:center;
-	margin:20px 0 70px;
-}
-
-.content-headline h2 {
-	background-color:#FFFFFF;
-	display:inline-block;
-	margin:-20px auto 0;
-	padding:0 20px;
-}
-
-.grey .content-headline h2 {
-	background-color:#F0F0F0;
-}
-
-.content-headline h3 {
-	font-size:14px;
-	color:#000000;
-	display:block;
-}
-
-
-#comments {
-    box-shadow: 0 -1px 6px 1px rgba(0,0,0,0.1);
-	background-color:#ffffff;
-}
-
-#comments form {
-	margin-bottom:30px;
-}
-
-#comments .btn {
-	margin-top:7px;
-}
-
-#comments form fieldset {
-	clear:both;
-}
-
-#comments form textarea {
-	height:100px;
-}
-
-#comments .media {
-	border-top:1px dashed #ffffff;
-	padding:20px 0;
-	margin:0;
-}
-
-#comments .media > .pull-left {
-    margin-right:20px;
-}
-
-#comments .media img {
-	max-width:100px;
-}
-
-#comments .media h4 {
-	margin:0 0 10px;
-}
-
-#comments .media h4 span {
-	font-size:14px;
-	float:center;
-	color:#000000;
-}
-
-#comments .media p {
-	margin-bottom:15px;
-	text-align:justify;
-}
-
-#comments .media-detail {
-	margin:0;
-}
-
-#comments .media-detail li {
-	color:#000000;
-	font-size:12px;
-	padding-right: 10px;
-	font-weight:600;
-}
-
-#comments .media-detail a:hover {
-	text-decoration:underline;
-}
-
-#comments .media-detail li:last-child {
-	padding-right:0;
-}
-
-#comments .media-detail li i {
-	color:#000000;
-	font-size:15px;
-	margin-right:10px;
-}
+  <link rel="stylesheet" href="resto.css">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <style>
       .bd-placeholder-img {
         font-size: 1.125rem;
         text-anchor: middle;
@@ -273,45 +284,10 @@ include 'fungsirestoran';
         display: block !important;
       }
     </style>
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
-<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-<!------ Include the above in your HEAD tag ---------->
+    
   </head>
-  <body style="background-color: rgba(176,42,55,255);">
-   <!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Post Review</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <h2>Star Rating with Bootstrap, Radio Inputs, and jQuery</h2>
-        <div class="rating">
-          <input type="radio" id="star5" name="rating" value="1">
-          <label for="star5">&#9733;</label>
-          <input type="radio" id="star4" name="rating" value="2">
-          <label for="star4">&#9733;</label>
-          <input type="radio" id="star3" name="rating" value="3">
-          <label for="star3">&#9733;</label>
-          <input type="radio" id="star2" name="rating" value="4">
-          <label for="star2">&#9733;</label>
-          <input type="radio" id="star1" name="rating" value="5">
-          <label for="star1">&#9733;</label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        
-        <button type="button" class="btn btn-primary">Post Review</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <body style="background-color: black ; " >
+   
 
     <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
       
@@ -371,7 +347,7 @@ include 'fungsirestoran';
   </div>
   
   <div class="container" >
-    <nav class="navbar navbar-expand-lg bg-danger rounded" aria-label="Eleventh navbar example">
+    <nav class="navbar navbar-expand-lg bg-secondary rounded" aria-label="Eleventh navbar example">
       <div class="container-fluid">
         <a class="navbar-brand ps-3" href="index.html"><center><img src="IMG/DESAIDUA1.jpg" style="width:100px;height:60px;"></center></a>
         
@@ -382,31 +358,44 @@ include 'fungsirestoran';
         <div class="collapse navbar-collapse" id="navbarsExample09">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#">Home</a>
+              <a class="nav-link active" aria-current="page" href="index.php">HOME</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Top Restoran</a>
+              <a class="nav-link" href="top.php">TOP RESTORAN</a>
             </li>
             
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Tema</a>
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">TEMA</a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
+              
+                <?php while ($fetchtema = $resulttema->fetch_assoc()): ?> 
+                  <li>
+                  <form class="dropdown-item" action="tema.php" method="post">
+                    <input type="hidden" name="idtema" value="<?= $fetchtema["idtema"] ?? '-' ?>">
+                    <button class="btn btn-secondary" type="submit"><?= $fetchtema["tema"] ?? '-' ?></button>
+              </form>
+            </li>
+            <?php endwhile ?>
               </ul>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">lokasi</a>
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">LOKASI</a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
+              <?php while ($fetchlokasi = $resultlokasi->fetch_assoc()): ?> 
+                <li><form class="dropdown-item" action="lokasi.php" method="post">
+                    <input type="hidden" name="idlokasi" value="<?= $fetchlokasi["idlokasi"] ?? '-' ?>">
+                    <button class="btn btn-secondary" type="submit"><?= $fetchlokasi["lokasi"] ?? '-' ?></button>
+              </form>
+            </li>
+            <?php endwhile ?>
               </ul>
             </li>
           </ul>
-          <form role="search">
-            <input class="form-control" type="search" placeholder="Search" aria-label="Search">
+          <form role="search" action="search.php" method="post">
+                <div class="input-group"> 
+        <input type="search" class="form-control rounded" name="search" placeholder="Search" aria-label="Search" aria-describedby="search-addon" />
+        <button type="submit" class="btn btn-primary" name="cari" data-mdb-ripple-init>search</button>
+      </div>
           </form>
         </div>
       </div>
@@ -416,208 +405,162 @@ include 'fungsirestoran';
   
 </header>
 
-<main style="background-image: url('1.jpg');  background-size: cover;">
+<main style="background-image: url('IMG/Tugu_Batang_Garing.JPG');  background-size: cover;">
 
     
   
 
-  <div class="album py-5 bg-body-tertiary bg-danger " style="background-image: url('1.jpg');  background-size: cover;">
+  <div class="album py-5 bg-body-tertiary" style="background-image: url('/IMG/Tugu_Batang_Garing.jpg');  background-size: cover;">
     <div class="container">
-        <DIV class="container-fluid" style="color:black ">
-            <div style="border: 0px solid;
-  margin: auto;
-  width: 69%;
-  padding: 10px;background-color:  rgb(56, 56, 56);
-  "
-  >
-            <img src="/IMG/1.jpg"  style="float: left; width:200px;height:200px; margin-right:15px;">
-<table bordercolor="#FFFFFF">
-    
-<tr>
-    <td>NAMA RESTORAN</td> 
-    <td>:BAKSO ANI</td>
-</tr>
-    
-<tr>
-    <td>MENU</td> 
-    <td>:BAKSO,MIE AYAM</td>
-</tr>
-<tr>
-    <td>TEMA </td> 
-    <td>:RUMAH MAKAN</td>
-</tr>
-<tr>
-    <td>RATING</td> 
-    <td></td>
-</tr>
-<br>    
-<tr>
-    <td>RASA</td> 
-    <td>:4</td>
-</tr>
-<tr>
-    <td>VIBE</td> 
-    <td>:2</td>
-</tr>
-<tr>
-  <td>PELAYAINAN </td> 
-    <td>:3</td>
-</tr>
-<tr>
-    <td>KEBERSIHAN</td> 
-    <td>:3</td>
-</tr>
-<tr>
-    <td>RATA-RATA</td> 
-    <td>:3,25</td>
-</tr>
-<tr>
-    <td>ALAMAT</td> 
-    <td>:JL.NGAJU</td>
-</tr>
-<br>    
-
-</table>
+        <div class="container --bs-danger"  > 
+      
 </div>
-</DIV>
+        </div>
+        <div class="container" style="background-color: white;">
+    <!-- Restaurant Image and Table -->
+    <div class="container mt-3">
+      
+      <div class="row" style="background-color: white;">
+
+        <div class="col-md-12">
+
+          <div class="col-md-12">
+            <img src="../IMGresto/<?= $fetch["gbrestoran"] ?? '-' ?>" alt="Restaurant Image" class="restaurant-img mt-3">
+          </div>
+          <ul class="list-group">
+            <li class="list-group-item"><strong>Nama:</strong> <?= $fetch["namarestoran"] ?? '-' ?></li>
+            <li class="list-group-item"><strong>Skor:</strong> <?= $fetch["vectors"] ?? '-' ?></li>
+            <li class="list-group-item"><strong>Menu:</strong> <?= $fetch["menu"] ?? '-' ?></li>
+            <li class="list-group-item"><strong>Alamat:</strong> <?= $fetch["alamat"] ?? '-' ?></li>
+            <li class="list-group-item"><strong>Jam buka:</strong> <?= $fetch["waktubuka"] ?? '-' ?></li>
+          </ul>
+        </div>
+      </div>
+      <!-- Restaurant Description -->
+      <div class="row restaurant-description">
+        <div class="col-md-12">
+          <p>
+          <?= $fetch["deskripsi"] ?? '-' ?>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="map" class="mt-3"></div>
 
 
-     <div class="container mt-3" >
-        <center><iframe src="" frameborder="0"><h1>Google Maps with PHP</h1>
-          <div id="map"></div>
-      
-          <script>
-              function initMap() {
-                  // Koordinat lokasi yang ingin Anda tampilkan
-                  var myLatLng = {lat: -2.987576196977235, lng: 114.381592481000859};
-      
-                  // Membuat objek peta
-                  var map = new google.maps.Map(document.getElementById('map'), {
-                      center: myLatLng,
-                      zoom: 15 // Zoom level, sesuaikan sesuai kebutuhan
-                  });
-      
-                  // Menambahkan marker ke peta
-                  var marker = new google.maps.Marker({
-                      position: myLatLng,
-                      map: map,
-                      title: 'Lokasi Anda'
-                  });
-              }
-          </script></iframe></center>
-     </div> 
+    <div class="container mt-3">
 
-     <div class="container">
       <div class="row">
 
-          <div class="panel panel-default widget">
-              <div class="panel-heading">
-                  <span class="glyphicon glyphicon-comment"></span>
-                  <h3 class="panel-title">
-                      Review Terbaru</h3>
-                  <span class="label label-info">
-                      </span>
-                      <button type="button" class="btn btn-primary mb-1 mt-1" data-toggle="modal" data-target="#exampleModal" >KOMENTAR</button>
-              </div>
-              <div class="panel-body">
-                  <ul class="list-group">
-                      <li class="list-group-item">
-                          <div class="row">
-                              
-                                  <div>
-                                      
-                                      <div class="mic-info mb-1" >
-                                          <LABEl>Bhaumik Patel on 2 Aug 2013</LABEl> 
-                                          <h6>SKOR: 4</h6> 
-                                      </div>
-                                  </div>
-                                  <div class="comment-text mb-2">
 
-                                      Lorem ipsum dolor sit amet consectetur, adipisicing elit. Voluptates officia iure fugit possimus voluptatem. Pariatur veritatis nobis eaque similique quos commodi architecto illum consequatur inventore mollitia, odit harum doloremque ipsum.
-                                  </div>
-                                  <div class="action">
-                                      
-                                      <button type="button" class="btn btn-success btn-xs" title="Approved">
-                                          <span class="glyphicon glyphicon-ok">Suka</span>
-                                      </button>
-                                      <button type="button" class="btn btn-danger btn-xs" title="Delete">
-                                          <span class="glyphicon glyphicon-trash"> Hapus</span>
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-                      </li>
-                      <li class="list-group-item">
-                          <div class="row">
-                              <div class="col-xs-2 col-md-1">
-                                  <img src="http://placehold.it/80" class="img-circle img-responsive" alt="" /></div>
-                              <div class="col-xs-10 col-md-11">
-                                  <div>
-                                      
-                                      <div class="mic-info">
-                                          By: <a href="#">Bhaumik Patel</a> on 11 Nov 2013
-                                      </div>
-                                  </div>
-                                  <div class="comment-text">
-                                      Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh
-                                      euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim
-                                  </div>
-                                  <div class="action">
-                                      <button type="button" class="btn btn-primary btn-xs" title="Edit">
-                                          <span class="glyphicon glyphicon-pencil"></span>
-                                      </button>
-                                      <button type="button" class="btn btn-success btn-xs" title="Approved">
-                                          <span class="glyphicon glyphicon-ok"></span>
-                                      </button>
-                                      <button type="button" class="btn btn-danger btn-xs" title="Delete">
-                                          <span class="glyphicon glyphicon-trash"></span>
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-                      </li>
-                      <li class="list-group-item">
-                          <div class="row">
-                              <div class="col-xs-2 col-md-1">
-                                  <img src="http://placehold.it/80" class="img-circle img-responsive" alt="" /></div>
-                              <div class="col-xs-10 col-md-11">
-                                  <div>
-                                     
-                                      <div class="mic-info">
-                                          By: <a href="#">Bhaumik Patel</a> on 11 Nov 2013
-                                      </div>
-                                  </div>
-                                  <div class="comment-text">
-                                      Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh
-                                      euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim
-                                  </div>
-                                  <div class="action">
-                                      <button type="button" class="btn btn-primary btn-xs" title="Edit">
-                                          <span class="glyphicon glyphicon-pencil"></span>
-                                      </button>
-                                      <button type="button" class="btn btn-success btn-xs" title="Approved">
-                                          <span class="glyphicon glyphicon-ok"></span>
-                                      </button>
-                                      <button type="button" class="btn btn-danger btn-xs" title="Delete">
-                                          <span class="glyphicon glyphicon-trash"></span>
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-                      </li>
-                  </ul>
-                  <a href="#" class="btn btn-primary btn-sm btn-block" role="button"><span class="glyphicon glyphicon-refresh"></span> More</a>
+        <div class="col-md-8 offset-md-2">
+          <!-- Review Column -->
+          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+            Tulis Review
+          </button>
+          <?php while ($fetchreview = $queryreview->fetch_assoc()): ?> 
+          <div class="review-container">
+            <!-- Username & Date -->
+            
+              <div>
+            
+              <span class="fw-bold"><?= $fetchreview["username"] ?? '-' ?></span>
+              <span class="text-muted"> - <?= $fetchreview["tglpost"] ?? '-' ?></span>
+              <!-- Review Score -->
+              <div class="review-score">
+                <span>Rasa: <?= $fetchreview["rasa"] ?? '-' ?></span>
+                <span class="mx-2">Vibe: <?= $fetchreview["vibe"] ?? '-' ?></span>
+                <span>Kebersihan: <?= $fetchreview["bersih"] ?? '-' ?></span>
+                <span class="mx-2">Pelayanan: <?= $fetchreview["pelayanan"] ?? '-' ?></span>
               </div>
-          </div>
+            </div>
+            <!-- Review Content -->
+            <div class="mt-2">
+              <p><?= $fetchreview["review"] ?? '-' ?></p>
+            </div>
+            <?php if ($fetchreview["username"] == $user): ?>
+    <form action="" method="post">
+        <!-- Delete Button -->
+        <input type="hidden" name="idreview" value="<?= htmlspecialchars($fetchreview["idreview"]) ?>">
+        <button class="btn btn-danger btn-sm delete-btn" name="hapus" type="submit">Hapus</button>
+    </form>
+<?php endif; ?>
+         
+          
+          <!-- End Review Column -->
+        </div> <?php endwhile ?>
       </div>
-  </div>
-  
-        </div>
-        </div>
-        </div>
-        </div>
-     </div> 
+      </div>
+    </div>
+
+   <!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">review</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <div class="container mt-5">
+    <form method="post" action="">
+    <input type="hidden" name="iduser" value="<?= $iduser ?? '-' ?>">
+    <input type="hidden" name="username" value="<?= $user ?? '-' ?>">
+    <input type="hidden" name="idrestoran" value="<?= $fetch["idrestoran"] ?? '-' ?>">
+    <input type="hidden" name="namarestoran" value="<?= $fetch["namarestoran"] ?? '-' ?>">
+    <label for="rasa">RASA:</label>
+    <select class="form-select" aria-label="Default select example" name="rasa" id="rasa">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+    <label for="vibe">VIBE(SUASANA):</label>
+    <select class="form-select" aria-label="Default select example" name="vibe" id="vibe">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+    <label for="bersih">KEBERSIHAN:</label>
+    <select class="form-select" aria-label="Default select example" name="kebersihan" id="kebersihan">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+    <label for="pelayanan">PERLAYANAN:</label>
+    <select class="form-select" aria-label="Default select example" name="pelayanan" id="pelayanan">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+      <div class="form-group">
+        <label for="review">Review:</label>
+        <textarea class="form-control" id="review" name="review" rows="5"></textarea>
       
+  </div>
+      </div>
+      <div class="modal-footer">
+      </div>
+      <button type="submit" class="btn btn-primary" name="submit">Submit</button>
+    </form>
+      </div>
+    </div>
+  </div>
+</div>
+    
+  </div>
+        
+      </div>
     </div>
   </div>
 
@@ -631,42 +574,40 @@ include 'fungsirestoran';
     <p class="mb-1">made by kevin winerson</p>
     
   </div>
-  <!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Modal Title</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        This is the content of the modal.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
 </footer>
-<script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB94cV437Em7xBaIRU89VPCSDBnzyNQN9g&callback=initMap"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script>
-  $(document).ready(function(){
-    $('.rating > input').change(function () {
-      var $radio = $(this);
-      // Menghapus kelas 'checked' dari semua label
-      $('.rating > label').removeClass('checked');
-      // Menambahkan kelas 'checked' pada label terdekat yang dipilih
-      $radio.closest('label').addClass('checked');
-    });
-  });
-</script> 
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-A7FZj7v/pDzvo3fjkFcuuF5odpEc4+9gSgVIUz8QF0sIibFv8qRxni1hFf4M8TSc" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
+
+
+
+<script>
+  function initMap() {
+    // Koordinat lokasi yang ingin Anda tampilkan
+    var myLatLng = {
+      lat: <?= $fetch["Latitude"] ?? '-' ?>,
+      lng: <?= $fetch["Longitude"] ?? '-' ?>
+    };
+
+    // Membuat objek peta
+    var map = new google.maps.Map(document.getElementById('map'), {
+      center: myLatLng,
+      zoom: 15 // Zoom level, sesuaikan sesuai kebutuhan
+    });
+
+    // Menambahkan marker ke peta
+    var marker = new google.maps.Marker({
+      position: myLatLng,
+      map: map,
+      title: 'Lokasi Anda'
+    });
+  }
+</script>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB94cV437Em7xBaIRU89VPCSDBnzyNQN9g&callback=initMap"></script>
+<script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
+
+    </body>
 </html>
