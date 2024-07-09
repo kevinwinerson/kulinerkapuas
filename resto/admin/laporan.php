@@ -1,6 +1,17 @@
 <?php
 include 'koneksi.php';
-
+session_start();
+if (!@$_SESSION['telah_login']) {
+    header("location: /resto/admin/login.php");
+ }
+  
+ $queryrestoran = "SELECT COUNT(idrestoran) as jumlahrestoran FROM restoran";
+$resultrestoran = $koneksi->query($queryrestoran);
+$fecthrestoran= $resultrestoran->fetch_assoc();
+$querytema = "SELECT COUNT(idtema) as jumlahtema FROM tema";
+$resulttema = $koneksi->query($querytema);
+$fecthtema= $resulttema->fetch_assoc();
+;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,7 +21,7 @@ include 'koneksi.php';
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>HALAMAN PESERTA</title>
+        <title>Laporan</title>
         <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
         <link href="css/styles.css" rel="stylesheet" />
         <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -53,7 +64,7 @@ include 'koneksi.php';
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                     
-                        <li><a class="dropdown-item" href="#!">Logout</a></li>
+                        <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
             </ul>
@@ -64,7 +75,7 @@ include 'koneksi.php';
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading"></div>
-                            <a class="nav-link" href="home.html">
+                            <a class="nav-link" href="home.php">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 <b>Home</b>
                             </a>
@@ -134,8 +145,8 @@ include 'koneksi.php';
                                     <div class="card-body">Peringkat Restoran</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
                                         <div class="COL">
-                                        <div><label ><h4>110</h4></label></div>
-                                        <div><a class="small text-white stretched-link" href="#">Laporan</a></div>
+                                        <div><label ><h4><?= $fecthrestoran["jumlahrestoran"] ?? '-' ?></h4></label></div>
+                                        <div><a class="small text-white stretched-link" href="fpdf186/laporanrestopdf1.php">Laporan</a></div>
                                         
                                     </div><div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
@@ -146,8 +157,8 @@ include 'koneksi.php';
                                     <div class="card-body">Statistik Tema Populer</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
                                     <div class="COL">
-                                        <div><label ><h4>55</h4></label></div>
-                                        <div><a class="small text-white stretched-link" href="#">Laporan</a></div>
+                                        <div><label ><h4><?= $fecthtema["jumlahtema"] ?? '-' ?></h4></label></div>
+                                        <div><a class="small text-white stretched-link" href="fpdf186/laporantemapdf2.php">Laporan</a></div>
                                         
                                     </div><div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>

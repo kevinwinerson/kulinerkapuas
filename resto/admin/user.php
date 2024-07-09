@@ -1,6 +1,36 @@
 <?php
 include 'koneksi.php';
 
+session_start();
+if (!@$_SESSION['telah_login']) {
+    header("location: /resto/admin/login.php");
+ } 
+$query="SELECT*FROM user";
+$result = $koneksi->query($query);
+
+if(isset($_POST['hapus'])) {
+    $id = $_POST['iduser'];
+
+$query = "DELETE FROM user WHERE iduser = '".$id."'";
+
+$data  = $koneksi->query($query);
+
+if ($data) {
+    echo "<script>
+        alert('Data Berhasil Dihapus');
+        
+        setTimeout(() => { window.location.href = window.location.origin + '/resto/admin/user.php' }, 10);
+    </script>";
+} else { 
+    
+
+    echo "<script>
+        alert('Data Gagal Dihapus');
+        
+        setTimeout(() => { window.location.href = window.location.origin + '/resto/admin/user.php' }, 10);
+    </script>";
+}
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -53,7 +83,7 @@ include 'koneksi.php';
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                     
-                        <li><a class="dropdown-item" href="#!">Logout</a></li>
+                        <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
             </ul>
@@ -64,7 +94,7 @@ include 'koneksi.php';
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading"></div>
-                            <a class="nav-link" href="home.html">
+                            <a class="nav-link" href="home.php">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 <b>Home</b>
                             </a>
@@ -122,11 +152,11 @@ include 'koneksi.php';
                             <li class="breadcrumb-item active"></li>
                         </ol>
                  
-                       <button type="button" class="btn btn-primary mb-3" type="button" data-bs-toggle="modal" data-bs-target="#exampleModalScrollable" style="margin-bottom: 4PX;">TAMBAH DATA</button>
+                       
                         <div class="card mb-4">
                             <div class="card-header">
                                 <i class="fas fa-table me-1"></i>
-                                DATA RESTORAN
+                                DATA user
                             </div>
                             <div class="card-body">
                                 <div class="scroll">
@@ -142,104 +172,29 @@ include 'koneksi.php';
                                             
                                         </tr>
                                     <tbody>
+                                    <?php while ($fetch = $result->fetch_assoc()): ?>
                                         <tr>
-                                        <td class="mb-4"> <center>1</center></td>    
-                                       <td class="mb-4" style="margin-TOP: 4PX;" ><CENTER>SAMSUL</CENTER></td>
-                                       <td class="mb-4" style="margin-TOP: 4PX;" ><CENTER>SAMSUL</CENTER></td>
+                                        <td class="mb-4"> <center><?= $fetch["iduser"] ?? '-' ?></center></td>    
+                                       <td class="mb-4" style="margin-TOP: 4PX;" ><CENTER><?= $fetch["username"] ?? '-' ?></CENTER></td>
+                                       <td class="mb-4" style="margin-TOP: 4PX;" ><CENTER><?= $fetch["password"] ?? '-' ?></CENTER></td>
                                        <td class="mb-4">
-                                        <center class="mb-4"><button type="button" class="btn btn-warning ">Edit</button></center>
-                                        </td>
+                                        <form action="edituser.php" method="post">
+                                            <input type="hidden" name="iduser" value="<?= $fetch["iduser"] ?? '-' ?>">
+                                        <center class="mb-4"><button type="submit"  name="edit" class="btn btn-warning ">Edit</button></center>
+                                        </form>
+                                    </td>
                                        <td class="mb-4">
-                                        <center class="mb-4"><button type="button" class="btn btn-danger " style="margin-top: 3PX;">Hapus</button></center>
-                                        </td>
+                                       <form action="" method="post">
+                                            <input type="hidden" name="iduser" value="<?= $fetch["iduser"] ?? '-' ?>">
+                                        <center class="mb-4"><button type="submit" class="btn btn-danger"  name="hapus" style="margin-top: 3PX;">Hapus</button></center>
+                                        </form>
+                                    </td>
                                     </tr>
-                                     
+                                    <?php endwhile ?>
                                     </tbody>
                                 </table></div>
-                                <!--modal satu-->
-                                    <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-scrollable" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalScrollableTitle">DATA PESERTA KARTU AK-1</h5>
-                                                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                     
-                                                     <input type="text" class="form-control" placeholder="NAMA LENGAKAP">
-                                                     <br>
-                                                     <input type="text" class="form-control" placeholder="NIK"><br>
-                                                     <input type="text" class="form-control" placeholder="ALAMAT"><br>
-                                                     <input type="text" class="form-control" placeholder="NO.HP"><br>
-                                                     <input type="email" class="form-control" placeholder="EMAIL"><br>
-                                                     <label>AGAMA</label><br>
-                                                     <input type="radio" id="ISLAM" name="AGAMA" value="ISLAM" > <label for="html">ISLAM</label><br>
-                                                     <input type="radio" id="KRISTEN" name="AGAMA" value="KRISTEN" ><label for="html">KRISTEN</label><br>
-                                                     <input type="radio" id="KATOLIK" name="AGAMA" value="KATOLIK" ><label for="html">KATOLIK</label><br>
-                                                     <input type="radio" id="HINDU" name="AGAMA" value="HINDU" ><label for="html">HINDU</label><br>
-                                                     <input type="radio" id="BUDDHA" name="AGAMA" value="BUDDHA" ><label for="html">BUDDHA</label><br>
-                                                     <input type="radio" id="KONGHUCHU" name="AGAMA" value="KONGHUCHU" ><label for="html">KONGHUCHU</label><br>
-                                                     <input type="radio" id="LAINNYA" name="AGAMA" value="LAINNYA" ><label for="html">LAINNYA</label><br>
-                                                     <br>
-                                                     <input type="NUMBER" class="form-control" placeholder="Tinggi badan"><br>
-                                                     <input type="NUMBER" class="form-control" placeholder="berat badan"><br>
-                                                     <label>Pendidikan</label><br>
-                                                     <input type="radio" id="SMP" name="PENDIDIKAN" value="SMP" > <label for="html">SMP</label><br>
-                                                     <input type="radio" id="SMA" name="PENDIDIKAN" value="SMA" ><label for="html">SMA</label><br>
-                                                     <input type="radio" id="SMK" name="PENDIDIKAN" value="SMK" ><label for="html">SMK</label><br>
-                                                     <input type="radio" id="S1" name="PENDIDIKAN" value="S1" ><label for="html">S1</label><br>
-                                                     <input type="radio" id="S2" name="PENDIDIKAN" value="S2" ><label for="html">S2</label><br>
-                                                     <br>
-                                                     <input type="text" class="form-control" placeholder="KAMPUS/SEKOLAH"><br>
-                                                     <input type="text" class="form-control" placeholder="NILAI/IPK"><br>
-                                                     <input type="text" class="form-control" placeholder="KETERMPILAN"><br>
-                                                     <input type="NUMBER" class="form-control" placeholder="LAMA PENDIDKAN(TAHUN)"><br>
-                                                     <label>IJASAH DEPAN</label><br>
-                                                     <input type="file" name="IJASAH DEPAN"><br>
-                                                     <label>IJASAH BELAKANG</label><br>
-                                                     <input type="file" name="IJASAH BELAKANG"><br>
-                                                     <label>KTP</label><br>
-                                                     <input type="file" name="KTP"><br>
-                                                     <label>FOTO</label><br>
-                                                     <input type="file" name="FOTO"><br>
-
-
-                                                </div>
-                                                <div class="modal-footer"><button class="btn btn-primary" type="button">SIMPAN</button></div>
-                                            </div>
-                                            </div>
-                                        </div>
-                                        <!--modal dua-->
-                                        <div class="modal fade" id="exampleModalScrollable1" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-scrollable" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalScrollableTitle">SERTIFIKAT</h5>
-                                                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <input type="file" name="sertifikat">
-                                                </div>
-                                                <div class="modal-footer"><button class="btn btn-primary" type="button">SIMPAN</button></div>
-                                            </div>
-                                            </div>
-                                        </div>
-                                         <!--modal tiga--> 
-                                         <div class="modal fade" id="exampleModalScrollable2" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-scrollable" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalScrollableTitle">PENGALAMAN KERJA</h5>
-                                                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <input type="file" name="Pengalaman">
-                                                </div>
-                                                <div class="modal-footer"><button class="btn btn-primary" type="button">SIMPAN</button></div>
-                                            </div>
-                                            </div>
-                                        </div>
-                                <!--batas modal-->
+                               
+                                   
                             </div>
                         </div>
                     </div>

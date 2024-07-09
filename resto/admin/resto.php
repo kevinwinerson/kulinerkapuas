@@ -1,5 +1,105 @@
 <?php
 include 'koneksi.php';
+session_start();
+if (!@$_SESSION['telah_login']) {
+    header("location: /resto/admin/login.php");
+ } 
+ 
+$query="SELECT*FROM restoran";
+$result = $koneksi->query($query);
+$querytema="SELECT*FROM tema";
+$resulttema = $koneksi->query($querytema);
+$querylokasi="SELECT*FROM lokasi";
+$resultlokasi = $koneksi->query($querylokasi);
+
+if(isset($_POST['submit'])) {
+    $nama = $_POST['nama'];
+    $menu = $_POST['menu'];
+    $jambuka = $_POST['jambuka'];
+    $jamtutub = $_POST['jamtutup'];
+    $jam=$jambuka."-".$jamtutub;
+    $alamat = $_POST['alamat'];
+    $Latitude= $_POST['Latitude'];
+    $Longitude = $_POST['Longitude'];
+    $deskripsi = $_POST['deskripsi'];
+    $tema = $_POST['tema'];
+    $lokasi = $_POST['lokasi'];
+    $gambar = simpangambar();
+    
+    if (!$gambar) {
+        echo "<script>
+        alert('Gambar tidak ada, data tidak disimpan');
+        setTimeout(() => { window.location.href = window.location.origin + '/resto/admin/resto.php' }, 10);
+        </script>";
+    } else {
+        $sql = "INSERT INTO restoran (idrestoran, idtema, idlokasi, namarestoran, menu, alamat, waktubuka, vectors, vectorv, gbrestoran, deskripsi, latitude, longitude) 
+        VALUES('".null."','".$tema."','".$lokasi."','".$nama."','".$menu."','".$alamat."','".$jam."','".null."','".null."','".$gambar."','".$deskripsi."','".$Latitude."','".$Longitude."')";
+    
+        $query = $koneksi->query($sql);
+    
+        if ($query) {
+            echo "<script>
+                alert('Data Berhasil Disimpan');
+                setTimeout(() => { window.location.href = window.location.origin + '/resto/admin/resto.php' }, 10);
+            </script>";
+        } else { 
+            echo "<script>
+                alert('Data Gagal Disimpan');
+                setTimeout(() => { window.location.href = window.location.origin + '/resto/admin/resto.php' }, 10);
+            </script>";
+        }
+    }
+
+    
+}
+if(isset($_POST['hapus'])) {
+    $id = $_POST['idrestoran'];
+
+$query = "DELETE FROM restoran WHERE idrestoran = '".$id."'";
+
+$data  = $koneksi->query($query);
+
+if ($data) {
+    echo "<script>
+        alert('Data Berhasil Dihapus');
+        
+        setTimeout(() => { window.location.href = window.location.origin + '/resto/admin/resto.php' }, 10);
+    </script>";
+} else { 
+    
+
+    echo "<script>
+        alert('Data Gagal Dihapus');
+        
+        setTimeout(() => { window.location.href = window.location.origin + '/resto/admin/resto.php' }, 10);
+    </script>";
+}
+}
+function simpangambar(){
+    $namafile=$_FILES['gambar']['name'];
+    $ukuan=$_FILES['gambar']['size'];
+ 
+    $tmpname=$_FILES['gambar']['tmp_name'];
+
+    $ekstensigabarvalid=['jpg','jpeg','png'];
+    $ekstensigambar=explode('.',$namafile) ;
+    $ekstensigambar=strtolower(end($ekstensigambar));
+
+    if(!in_array($ekstensigambar,$ekstensigabarvalid)){
+        echo"<script>
+        alert('file yang di upload bukan gambar');
+        </script>";
+        return  false;
+    }
+    $namabaru=uniqid();
+    $namabaru.='.';
+    $namabaru.=$ekstensigambar;
+
+    move_uploaded_file($tmpname,"../IMGresto/".$namabaru);
+    move_uploaded_file($tmpname,"IMG/".$namabaru);
+    return $namabaru;
+}
+
 
 ?>
 <!DOCTYPE html>
@@ -10,7 +110,7 @@ include 'koneksi.php';
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>HALAMAN PESERTA</title>
+        <title>Restoran</title>
         <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
         <link href="css/styles.css" rel="stylesheet" />
         <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -53,7 +153,7 @@ include 'koneksi.php';
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                     
-                        <li><a class="dropdown-item" href="#!">Logout</a></li>
+                        <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
             </ul>
@@ -64,7 +164,7 @@ include 'koneksi.php';
                     <div class="sb-sidenav-menu">
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading"></div>
-                            <a class="nav-link" href="home.html">
+                            <a class="nav-link" href="home.php">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 <b>Home</b>
                             </a>
@@ -142,27 +242,42 @@ include 'koneksi.php';
                                             <th>ID LOKASI</th>
                                             <th>VEKTOR S</th>
                                             <th>VEKTOR V</th>
+                                            <th>CETAK</th>
                                             <th>EDIT</th>
                                             <TH>HAPUS</TH>
                                             
                                         </tr>
                                     <tbody>
+                                    <?php while ($fetch = $result->fetch_assoc()): ?>
                                         <tr>
-                                        <td class="mb-4"> <center>1</center></td>    
-                                       <td class="mb-4" style="margin-TOP: 4PX;" ><CENTER>SAMSUL</CENTER></td>
-                                       <td><img src="IMG/303f49dece81f4d309bb45a81467477b.jpg"style="width:150px;height:100px;"></td>
-                                       <TD class="mb-4"><center>JL SULTAN ADAM</center></TD>
-                                       <td class="mb-4"><center>1</center></td>
-                                       <td class="mb-4"> <center>1</center></td>
-                                       <td class="mb-4"> <CENter>4,8</CENter></td>
-                                       <td class="mb-4"> <CENter>4,8</CENter></td>
+                                        <td class="mb-4"> <center><?= $fetch["idrestoran"] ?? '-' ?></center></td>    
+                                       <td class="mb-4" style="margin-TOP: 4PX;" ><CENTER><?= $fetch["namarestoran"] ?? '-' ?></CENTER></td>
+                                       <td><img src="../IMGresto/<?= $fetch["gbrestoran"] ?? '-' ?>"style="width:150px;height:100px;"></td>
+                                       <TD class="mb-4"><center><?= $fetch["alamat"] ?? '-' ?></center></TD>
+                                       <td class="mb-4"><center><?= $fetch["idtema"] ?? '-' ?></center></td>
+                                       <td class="mb-4"> <center><?= $fetch["idlokasi"] ?? '-' ?></center></td>
+                                       <td class="mb-4"> <CENter><?= $fetch["vectors"] ?? '-' ?></CENter></td>
+                                       <td class="mb-4"> <CENter><?= $fetch["vectorv"] ?? '-' ?></CENter></td>
                                        <td class="mb-4">
-                                        <center class="mb-4"><button type="button" class="btn btn-warning ">Edit</button></center>
+                                       <form action="laporprofile.php" method="post">
+                                           <input type="hidden" name="idrestoran" value="<?= $fetch["idrestoran"] ?? '-' ?>">
+                                           <center class="mb-4"><button type="submit" name="cetak" class="btn btn-secondary ">cetak</button></center>
+                                        </form>
+                                        </td>
                                        <td class="mb-4">
-                                        <center class="mb-4"><button type="button" class="btn btn-danger " style="margin-top: 3PX;">Hapus</button></center>
+                                       <form action="editresto.php" method="post">
+                                           <input type="hidden" name="id" value="<?= $fetch["idrestoran"] ?? '-' ?>">
+                                           <center class="mb-4"><button type="submit" name="edit" class="btn btn-warning ">Edit</button></center>
+                                        </form>
+                                        </td>
+                                       <td class="mb-4">
+                                       <form action="" method="post">
+                                            <input type="hidden" name="idrestoran" value="<?= $fetch["idrestoran"] ?? '-' ?>">
+                                        <center class="mb-4"><button type="submit" name="hapus" class="btn btn-danger " style="margin-top: 3PX;">Hapus</button></center>
+                                        </form>
                                         </td>
                                     </tr>
-                                     
+                                    <?php endwhile ?>
                                     </tbody>
                                 </table></div>
                                 <!--modal satu-->
@@ -170,36 +285,47 @@ include 'koneksi.php';
                                         <div class="modal-dialog modal-dialog-scrollable" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalScrollableTitle">DATA PESERTA KARTU AK-1</h5>
+                                                    <h5 class="modal-title" id="exampleModalScrollableTitle">MASUKAN DATA RESTORAN</h5>
                                                     <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                <form action="<?php  echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" method="post" enctype="multipart/form-data">
-                                                     <input type="text" class="form-control" placeholder="Nama Restoran"id="nama" name="nama"required ><br>
-                                                     <input type="text" class="form-control" placeholder="Menu"id="menu" name="menu" required  ><br>
-                                                     <label for="">Jam Buka</label><br>
-                                                     <input type="time" class="form-control" placeholder="Jam Buka"id="jambuka" name="jambuka" required><br>
-                                                     <label for="">Jam Tutub</label><br>
-                                                     <input type="time" class="form-control" placeholder="Jam Tutub"id="jamtutub" name="jamtutub" required><br>
-                                                     <input type="text" class="form-control" placeholder="Alamat"id="Alamat" name="Alamat" required><br>
-                                                     <input type="text" class="form-control" placeholder="Latitude"id="Latitude" name="Latitude" required><br>
-                                                     <input type="text" class="form-control" placeholder="Longitude"id="Longitude" name="Longitude" required><br>
-                                                     <textarea class="form-control" placeholder="Deskirpsi" rows="3"name="deskripsi" id="deskripsi" placeholder="deskripsi" required></textarea><br>
-                                                     <label>tema</label><br>
-                                                     <? ?>
-                                                     <input type="radio" id="tema" name="tema" value="<? ?>" > <label for="html"><? ?></label><br>
-                                                     <? ?>
-                                                     <label>lokasi</label><br>
-                                                     <? ?>
-                                                     <input type="radio" id="lokasi" name="lokasi" value="<? ?>" > <label for="html"><? ?></label><br>
-                                                     <? ?>
-                                                     <br>
-                                                     <label>Gambar Restoran</label><br>
-                                                     <input type="file" id="gambar" name="gambar" required><br>
-                                                </div>
-                                                <div class="modal-footer"><button class="btn btn-primary" type="submit">SIMPAN</button></div>
-                                            </div>
-                                            </form>
+                                                <form action="" method="post" enctype="multipart/form-data">
+    <input type="text" class="form-control" placeholder="Nama Restoran" id="nama" name="nama" required><br>
+    <input type="text" class="form-control" placeholder="Menu" id="menu" name="menu" required><br>
+    
+    <label for="jambuka">Jam Buka</label><br>
+    <input type="time" class="form-control" id="jambuka" name="jambuka" required><br>
+    
+    <label for="jamtutup">Jam Tutup</label><br>
+    <input type="time" class="form-control" id="jamtutup" name="jamtutup" required><br>
+    
+    <input type="text" class="form-control" placeholder="Alamat" id="alamat" name="alamat" required><br>
+    <input type="text" class="form-control" placeholder="Latitude"  id="Latitude" name="Latitude" required><br>
+    <input type="text" class="form-control" placeholder="Longitude"  id="Longitude" name="Longitude" required><br>
+    
+    <textarea class="form-control" placeholder="Deskripsi" rows="3" name="deskripsi" id="deskripsi" required></textarea><br>
+    
+    <label for="tema">Tema</label><br>
+    <select class="form-select" aria-label="Default select example" name="tema" id="tema">
+        <?php while ($fetch = $resulttema->fetch_assoc()): ?> 
+            <option value="<?= $fetch["idtema"] ?? '-' ?>"><?= $fetch["tema"] ?? '-' ?></option>
+        <?php endwhile ?>
+    </select>
+    
+    <label for="lokasi">Lokasi</label><br>
+    <select class="form-select" aria-label="Default select example" name="lokasi" id="lokasi">
+        <?php while ($fetch = $resultlokasi->fetch_assoc()): ?> 
+            <option value="<?= $fetch["idlokasi"] ?? '-' ?>"><?= $fetch["lokasi"] ?? '-' ?></option>
+        <?php endwhile ?>
+    </select>
+    <br>
+    
+    <input type="file" id="gambar" name="gambar" required><br>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="submit" name="submit">SIMPAN</button>
+    </div>
+</form>
+
                                             </div>
                                         </div>
                                         <!--modal dua-->

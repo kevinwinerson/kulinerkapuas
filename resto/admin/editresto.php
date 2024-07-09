@@ -1,14 +1,18 @@
 <?php
 include 'koneksi.php';
 session_start();
-if (!@$_SESSION['telah_login']) {
-    header("location: /resto/admin/login.php");
- } 
-
- $id=$_POST['idadmin'];
-$query="SELECT*FROM dataadmin where idadmin=$id";
+$id=$_POST['id'];
+$query="SELECT*FROM restoran where idrestoran=$id";
 $result = $koneksi->query($query);
 $fecth= $result->fetch_assoc();
+$querytema="SELECT*FROM tema";
+$resulttema = $koneksi->query($querytema);
+$querylokasi="SELECT*FROM lokasi";
+$resultlokasi = $koneksi->query($querylokasi);
+
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,7 +22,7 @@ $fecth= $result->fetch_assoc();
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>HALAMAN edit Admin</title>
+        <title>HALAMAN EDIT Restoran</title>
         <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
         <link href="css/styles.css" rel="stylesheet" />
         <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -136,18 +140,53 @@ $fecth= $result->fetch_assoc();
                         <div class="card mb-4">
                             <div class="card-header">
 
-                                <h4>Edit Admin</h4>
-                                <form action="updateadmin.php" method="post" enctype="multipart/form-data">
-                                <div class="input-group input-group-sm mb-3">
-                                <input type="hidden" name="idadmin" value="<?= $fecth["idadmin"] ?? '-' ?>">
-                               <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="admin" id="admin" value="<?= $fecth["adminname"] ?? '-' ?>"><br><br>
-                                 </div>
-                                 <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="password" id="password" value="<?= $fecth["passwordadmin"] ?? '-' ?>" ><br>
-                            <button  class="btn btn-primary" type="submit">Ubah</button>   
-                           
-                                </form>
+                                <h4>Edit Restoran</h4>
+                                <form action="updaterestoran.php" method="post" enctype="multipart/form-data">
+                                                    <input type="hidden" class="form-control" id="idrestoran" name="idrestoran"value="<?= $fecth["idrestoran"] ?? '-' ?>"  required ><br>
+                                                    <input type="hidden" class="form-control" id="gambarlama" name="gambarlama"value="<?= $fecth["gbrestoran"] ?? '-' ?>"  required ><br>
+                                                    <label>NAMA</label><br>
+                                                    <input type="text" class="form-control" placeholder="Nama Restoran"id="nama" name="nama"value="<?= $fecth["namarestoran"] ?? '-' ?>"  required ><br>
+                                                    <label>MENU</label><br>
+                                                     <input type="text" class="form-control" placeholder="Menu"id="menu" name="menu" value="<?= $fecth["menu"] ?? '-' ?>" required  ><br>
+                                                     <label for="">Jam Buka</label><br>
+                                                     <input type="time" class="form-control" placeholder="Jam Buka"id="jambuka" name="jambuka" required><br>
+                                                     <label for="">Jam Tutub</label><br>
+                                                     <input type="time" class="form-control" placeholder="Jam Tutub" id="jamtutub" name="jamtutup" required><br>
+                                                     <label>ALAMAT</label><br>
+                                                     <input type="text" class="form-control" placeholder="Alamat" id="Alamat" name="alamat" value="<?= $fecth["alamat"] ?? '-' ?>" required><br>
+                                                     <label>Latitude</label><br>
+                                                     <input type="text" class="form-control" placeholder="Latitude"id="Latitude" name="Latitude" value="<?= $fecth["Latitude"] ?? '-' ?>" required><br>
+                                                     <label>Longitude</label><br>
+                                                     <input type="text" class="form-control" placeholder="Longitude"id="Longitude" name="Longitude" value="<?= $fecth["Longitude"] ?? '-' ?>" required><br>
+                                                     <label>deskripsi</label><br>
+                                                     <input type="text" class="form-control" placeholder="deskripsi" id="deskripsi" name="deskripsi" value="<?= $fecth["deskripsi"] ?? '-' ?>" required><br>
+                                                     <label>tema</label><br>
+
+                                                     <select class="form-select" aria-label="Default select example"  name="tema" id="tema">
+                                                    <?php while ($fetch = $resulttema->fetch_assoc()): ?> 
+                                                     <option value="<?= $fetch["idtema"] ?? '-' ?>"><?= $fetch["tema"] ?? '-' ?></option>
+                                                     <?php endwhile ?>
+                                                    </select>
+                                                   
+                                                     <label>lokasi</label><br>
+                                                   
+                                                     <select class="form-select" aria-label="Default select example" name="lokasi" id="lokasi">
+                                                     <?php while ($fetch = $resultlokasi->fetch_assoc()): ?> 
+                                                        
+                                                     <option value="<?= $fetch["idlokasi"] ?? '-' ?>"><?= $fetch["lokasi"] ?? '-' ?></option>
+                                                     <?php endwhile ?>
+                                                    </select>
+                                                    <br>
+                                                     
+                                                     <label>Gambar Restoran</label><br>
+
+                                                     <input type="file" id="gambar" name="gambar" value="<?= $fecth["gbrestoran"] ?? '-' ?>" required><br>
+                                                
+                                                <button class="btn btn-primary mt-3 mr-3" type="submit">SIMPAN</button>
+                                            </div>
+                                            </form>
                             </div>
-                            
+                            </div>
                                 </div>   
         </DIV>        
                 </main>

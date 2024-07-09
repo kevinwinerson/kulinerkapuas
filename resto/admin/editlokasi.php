@@ -1,7 +1,15 @@
 <?php
 include 'koneksi.php';
-
+session_start();
+if (!@$_SESSION['telah_login']) {
+    header("location: /resto/admin/login.php");
+ }  
+ $id=$_POST['idlokasi'];
+$query="SELECT*FROM lokasi where idlokasi=$id";
+$result = $koneksi->query($query);
+$fecth= $result->fetch_assoc();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -10,7 +18,7 @@ include 'koneksi.php';
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>HALAMAN PESERTA</title>
+        <title>HALAMAN edit Lokasi</title>
         <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
         <link href="css/styles.css" rel="stylesheet" />
         <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -53,7 +61,7 @@ include 'koneksi.php';
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                     
-                        <li><a class="dropdown-item" href="#!">Logout</a></li>
+                        <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
             </ul>
@@ -128,15 +136,16 @@ include 'koneksi.php';
                         <div class="card mb-4">
                             <div class="card-header">
 
-                                <h4>Edit User</h4>
-                                <form action="update.php" method="post" enctype="multipart/form-data">
+                                <h4>Edit lokasi</h4>
+                                <form action="updatelokasi.php" method="post" enctype="multipart/form-data">
                                 <div class="input-group input-group-sm mb-3"> 
-                               <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="lokasi" id="lokasi" placeholder="lokasi"><br><br>
+                                <input type="hidden" name="idlokasi" value="<?= $fecth["idlokasi"] ?? '-' ?>">
+                               <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="lokasi" id="lokasi" value="<?= $fecth["lokasi"] ?? '-' ?>"><br><br>
                                  </div>
                                  <div class="mb-3">
-                                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"name="deskripsi" id="deskripsi" placeholder="deskripsi" ></textarea>
+                                 <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="deskripsi" id="deskripsi" value="<?= $fecth["deskripsi"] ?? '-' ?>"><br><br>
                                     </div>
-                                 <button type="button" class="btn btn-primary" type="submit">Ubah</button>   
+                                 <button  class="btn btn-primary" type="submit" >Ubah</button>   
                            
                                 </form>
                             </div>

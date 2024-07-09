@@ -1,6 +1,13 @@
 <?php
 include 'koneksi.php';
-
+session_start();
+if (!@$_SESSION['telah_login']) {
+    header("location: /resto/admin/login.php");
+ } 
+ $id=$_POST['iduser'];
+ $query="SELECT*FROM user where iduser=$id";
+ $result = $koneksi->query($query);
+ $fecth= $result->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,7 +17,7 @@ include 'koneksi.php';
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>HALAMAN PESERTA</title>
+        <title>HALAMAN EDIT User</title>
         <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
         <link href="css/styles.css" rel="stylesheet" />
         <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -53,7 +60,7 @@ include 'koneksi.php';
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                     
-                        <li><a class="dropdown-item" href="#!">Logout</a></li>
+                        <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
             </ul>
@@ -129,13 +136,13 @@ include 'koneksi.php';
                             <div class="card-header">
 
                                 <h4>Edit User</h4>
-                                <form action="update.php" method="post" enctype="multipart/form-data">
+                                <form action="updateuser.php" method="post" enctype="multipart/form-data">
                                 <div class="input-group input-group-sm mb-3"> 
-
-                               <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="User" id="User" placeholder="User"><br><br>
+                                <input type="hidden" name="iduser" value="<?= $fecth["iduser"] ?? '-' ?>">
+                               <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="User" id="User" value="<?= $fecth["username"] ?? '-' ?>"><br><br>
                                  </div>
-                                 <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="password" id="password"placeholder="Password" ><br>
-                            <button type="button" class="btn btn-primary" type="submit">Ubah</button>   
+                                 <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="password" id="password" value="<?= $fecth["password"] ?? '-' ?>" ><br>
+                            <button type="submit" class="btn btn-primary" type="submit">Ubah</button>   
                            
                                 </form>
                             </div>
